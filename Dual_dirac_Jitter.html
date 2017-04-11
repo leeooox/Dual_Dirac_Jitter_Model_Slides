@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="author" content="Niu Li">
+  <title>Dual Dirac Jitter model</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="reveal.js/css/reveal.css">
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+div.sourceCode { overflow-x: auto; }
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code > span.dt { color: #902000; } /* DataType */
+code > span.dv { color: #40a070; } /* DecVal */
+code > span.bn { color: #40a070; } /* BaseN */
+code > span.fl { color: #40a070; } /* Float */
+code > span.ch { color: #4070a0; } /* Char */
+code > span.st { color: #4070a0; } /* String */
+code > span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code > span.ot { color: #007020; } /* Other */
+code > span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code > span.fu { color: #06287e; } /* Function */
+code > span.er { color: #ff0000; font-weight: bold; } /* Error */
+code > span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+code > span.cn { color: #880000; } /* Constant */
+code > span.sc { color: #4070a0; } /* SpecialChar */
+code > span.vs { color: #4070a0; } /* VerbatimString */
+code > span.ss { color: #bb6688; } /* SpecialString */
+code > span.im { } /* Import */
+code > span.va { color: #19177c; } /* Variable */
+code > span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code > span.op { color: #666666; } /* Operator */
+code > span.bu { } /* BuiltIn */
+code > span.ex { } /* Extension */
+code > span.pp { color: #bc7a00; } /* Preprocessor */
+code > span.at { color: #7d9029; } /* Attribute */
+code > span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code > span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code > span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code > span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+  </style>
+  <link rel="stylesheet" href="reveal.js/css/theme/black.css" id="theme">
+  <!-- Printing and PDF exports -->
+  <script>
+    var link = document.createElement( 'link' );
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = window.location.search.match( /print-pdf/gi ) ? 'reveal.js/css/print/pdf.css' : 'reveal.js/css/print/paper.css';
+    document.getElementsByTagName( 'head' )[0].appendChild( link );
+  </script>
+  <!--[if lt IE 9]>
+  <script src="reveal.js/lib/js/html5shiv.js"></script>
+  <![endif]-->
+  <script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+<section>
+  <h1 class="title">Dual Dirac Jitter model</h1>
+  <h2 class="author">Niu Li</h2>
+  <h3 class="date">Jun 17, 2016</h3>
+</section>
+
+<section id="outline" class="slide level1">
+<h1>Outline</h1>
+<ul>
+<li class="fragment">Jitter definition - short vs long term(TIE)</li>
+<li class="fragment">Jitter category - RJ, DJ and details</li>
+<li class="fragment">Review of statistics - PDF, CDF, erf, erfc</li>
+<li class="fragment">BERT vs Scope</li>
+<li class="fragment">Dual Dirac Model - <span class="math inline">\(DJ_{pp}\)</span> vs <span class="math inline">\(DJ_{\delta\delta}\)</span></li>
+<li class="fragment">Decompose method - Spectrum vs Tail Fit</li>
+<li class="fragment">Scope Jitter setting</li>
+</ul>
+</section>
+<section id="tie" class="slide level1">
+<h1>TIE</h1>
+<figure>
+<img src="images\TIE.png" />
+</figure>
+<ul>
+<li class="fragment">Deviation of the digital timing event from it is ideal position</li>
+<li class="fragment">A specified number of observations.</li>
+</ul>
+</section>
+<section id="jitter-definition" class="slide level1">
+<h1>Jitter definition</h1>
+<ul>
+<li class="fragment">Period Jitter (<span class="math inline">\(J_{PER}\)</span>)
+<ul>
+<li class="fragment">Time difference between measured period and ideal period</li>
+</ul></li>
+<li class="fragment">Cycle to Cycle Jitter (<span class="math inline">\(J_{CC}\)</span>)
+<ul>
+<li class="fragment">Time difference between two adjacent clock periods</li>
+<li class="fragment">Important for budgeting on-chip digital circuits cycle time</li>
+</ul></li>
+<li class="fragment">Accumulated Jitter (<span class="math inline">\(J_{AC}\)</span>)
+<ul>
+<li class="fragment">Time difference between measured clock and ideal trigger clock</li>
+<li class="fragment">Jitter measurement most relative to high-speed link systems</li>
+</ul></li>
+</ul>
+</section>
+<section id="jitte-analysis-method" class="slide level1">
+<h1>Jitte Analysis Method</h1>
+<ul>
+<li class="fragment">Time domain</li>
+<li class="fragment">Frequency domain</li>
+<li class="fragment">Statistics domain</li>
+<li class="fragment">Decompose to RJ and DJ</li>
+</ul>
+</section>
+<section id="monte-carlo" class="slide level1">
+<h1>Monte Carlo</h1>
+<ul>
+<li class="fragment">Monte Carlo Simulation is a way of studying probability distributions with sampling</li>
+<li class="fragment">Define a domain of possible inputs.</li>
+<li class="fragment">Generate inputs randomly from a probability distribution over the domain.</li>
+<li class="fragment">Perform a deterministic computation on the inputs.</li>
+<li class="fragment">Aggregate the results.</li>
+</ul>
+</section>
+<section id="dice-gambling" class="slide level1">
+<h1>Dice gambling</h1>
+<figure>
+<img src="images\dice3-300px.png" />
+</figure>
+<ul>
+<li class="fragment">7 dices , 6 faces.</li>
+<li class="fragment">summarize the 7 dices points</li>
+<li class="fragment">what is the PDF?</li>
+</ul>
+</section>
+<section id="dice-pdf" class="slide level1">
+<h1>Dice PDF</h1>
+<figure>
+<img src="images\dice.png" />
+</figure>
+</section>
+<section id="code" class="slide level1">
+<h1>Code</h1>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">import</span> numpy <span class="im">as</span> np
+<span class="im">from</span> numpy.random <span class="im">import</span> random_integers
+<span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt
+
+sample_len <span class="op">=</span> <span class="dv">1000000</span>
+res <span class="op">=</span> np.zeros(sample_len)
+<span class="cf">for</span> i <span class="op">in</span> <span class="bu">range</span>(sample_len):
+    res[i] <span class="op">=</span> np.<span class="bu">sum</span>(random_integers(<span class="dv">1</span>,<span class="dv">6</span>,<span class="dv">7</span>))
+plt.hist(res,bins<span class="op">=</span><span class="dv">35</span>,normed<span class="op">=</span><span class="va">True</span>)
+plt.show()</code></pre></div>
+</section>
+<section id="histogramsimulation" class="slide level1">
+<h1>Histogram(Simulation)</h1>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">import</span> numpy <span class="im">as</span> np
+<span class="im">from</span> numpy.fft <span class="im">import</span> rfft, rfftfreq
+<span class="im">from</span> numpy.random <span class="im">import</span> normal
+<span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt
+
+PJ_freq <span class="op">=</span> <span class="fl">10e6</span> <span class="co"># 10MHz</span>
+PJ_amp <span class="op">=</span> <span class="dv">10</span> <span class="co"># 10ps</span>
+RJ_rms <span class="op">=</span> <span class="dv">1</span> <span class="co"># 1ps</span>
+sample_rate <span class="op">=</span> <span class="fl">1e9</span> <span class="co">#1Gbps</span>
+sample_interval <span class="op">=</span> <span class="dv">1</span>.<span class="op">/</span>sample_rate
+N_cycle <span class="op">=</span><span class="dv">1000</span>
+pts <span class="op">=</span> sample_rate<span class="op">/</span>PJ_freq<span class="op">*</span>N_cycle
+
+
+t <span class="op">=</span> sample_interval<span class="op">*</span>np.arange(pts)<span class="op">*</span><span class="fl">1E6</span>
+
+<span class="co"># sin jitter</span>
+plt.figure()
+tie_sin <span class="op">=</span> PJ_amp<span class="op">*</span>np.sin(np.linspace(<span class="dv">0</span>,<span class="dv">2</span><span class="op">*</span>np.pi<span class="op">*</span>N_cycle,sample_rate<span class="op">/</span>PJ_freq<span class="op">*</span>N_cycle))
+plt.subplot(<span class="dv">311</span>)
+plt.plot(t,tie_sin)
+plt.xlabel(<span class="st">&quot;T(us)&quot;</span>)
+plt.ylabel(<span class="st">&quot;Time Trend(ps)&quot;</span>)
+plt.xlim([<span class="dv">0</span>,<span class="dv">1</span>]) <span class="co"># only plot 1us</span>
+plt.subplot(<span class="dv">312</span>)
+plt.hist(tie_sin,bins<span class="op">=</span><span class="dv">1000</span>,normed<span class="op">=</span><span class="va">False</span>)
+plt.xlabel(<span class="st">&quot;Jitter(ps)&quot;</span>)
+plt.ylabel(<span class="st">&quot;Hist(population)&quot;</span>)
+plt.xlim([<span class="op">-</span><span class="fl">10.2</span>,<span class="fl">10.2</span>])
+plt.subplot(<span class="dv">313</span>)
+plt.plot(rfftfreq(<span class="bu">len</span>(tie_sin),<span class="dv">1</span><span class="op">/</span>sample_rate)<span class="op">/</span><span class="fl">1e6</span>,np.<span class="bu">abs</span>(rfft(tie_sin)))
+plt.xlabel(<span class="st">&quot;Freq(MHz)&quot;</span>)
+plt.ylabel(<span class="st">&quot;Spectrum(ps)&quot;</span>)
+plt.xlim([<span class="dv">0</span>,<span class="dv">50</span>])
+plt.tight_layout()
+
+<span class="co">### random jitter</span>
+plt.figure()
+tie_normal <span class="op">=</span> normal(loc<span class="op">=</span><span class="dv">0</span>,scale<span class="op">=</span>RJ_rms,size<span class="op">=</span>pts)
+plt.subplot(<span class="dv">311</span>)
+plt.plot(t,tie_normal)
+plt.xlabel(<span class="st">&quot;T(us)&quot;</span>)
+plt.ylabel(<span class="st">&quot;Time Trend(ps)&quot;</span>)
+plt.xlim([<span class="dv">0</span>,<span class="dv">1</span>]) <span class="co"># only plot 1us</span>
+plt.subplot(<span class="dv">312</span>)
+plt.hist(tie_normal,bins<span class="op">=</span><span class="dv">1000</span>,normed<span class="op">=</span><span class="va">False</span>)
+plt.xlabel(<span class="st">&quot;Jitter(ps)&quot;</span>)
+plt.ylabel(<span class="st">&quot;Hist(population)&quot;</span>)
+plt.subplot(<span class="dv">313</span>)
+plt.plot(rfftfreq(<span class="bu">len</span>(tie_normal),<span class="dv">1</span><span class="op">/</span>sample_rate)<span class="op">/</span><span class="fl">1e6</span>,<span class="dv">20</span><span class="op">*</span>np.log10(np.<span class="bu">abs</span>(rfft(tie_normal))))
+plt.xlabel(<span class="st">&quot;Freq(MHz)&quot;</span>)
+plt.ylabel(<span class="st">&quot;Spectrum(dB)&quot;</span>)
+plt.tight_layout()
+
+<span class="co">#Combined jitter</span>
+plt.figure()
+tie_combine <span class="op">=</span> tie_sin<span class="op">+</span>tie_normal
+plt.subplot(<span class="dv">311</span>)
+plt.plot(t,tie_combine)
+plt.xlabel(<span class="st">&quot;T(us)&quot;</span>)
+plt.ylabel(<span class="st">&quot;Time Trend(ps)&quot;</span>)
+plt.xlim([<span class="dv">0</span>,<span class="dv">1</span>]) <span class="co"># only plot 1us</span>
+plt.subplot(<span class="dv">312</span>)
+plt.hist(tie_combine,bins<span class="op">=</span><span class="dv">1000</span>,normed<span class="op">=</span><span class="va">False</span>)
+plt.xlabel(<span class="st">&quot;Jitter(ps)&quot;</span>)
+plt.ylabel(<span class="st">&quot;Hist(population)&quot;</span>)
+plt.subplot(<span class="dv">313</span>)
+plt.plot(rfftfreq(<span class="bu">len</span>(tie_combine),<span class="dv">1</span><span class="op">/</span>sample_rate)<span class="op">/</span><span class="fl">1e6</span>,<span class="dv">20</span><span class="op">*</span>np.log10(np.<span class="bu">abs</span>(rfft(tie_combine))))
+plt.xlabel(<span class="st">&quot;Freq(MHz)&quot;</span>)
+plt.ylabel(<span class="st">&quot;Spectrum(dB)&quot;</span>)
+plt.xlim([<span class="dv">0</span>,<span class="dv">50</span>])
+plt.tight_layout()
+
+
+plt.show()</code></pre></div>
+</section>
+<section id="sinusoid" class="slide level1">
+<h1>Sinusoid</h1>
+<figure>
+<img src="images\tie_sin.png" alt="tie_sin" /><figcaption>tie_sin</figcaption>
+</figure>
+</section>
+<section id="randomgaussian" class="slide level1">
+<h1>Random(Gaussian)</h1>
+<figure>
+<img src="images\tie_random.png" alt="tie_random" /><figcaption>tie_random</figcaption>
+</figure>
+</section>
+<section id="combined" class="slide level1">
+<h1>Combined</h1>
+<figure>
+<img src="images\tie_combined.png" alt="tie_combined" /><figcaption>tie_combined</figcaption>
+</figure>
+</section>
+<section id="jitter-histogram" class="slide level1">
+<h1>Jitter Histogram</h1>
+<figure>
+<img src="images\jitter_histogram.png" />
+</figure>
+</section>
+<section id="jitter-category" class="slide level1">
+<h1>Jitter category</h1>
+<figure>
+<img src="images\jitter_cat.png" />
+</figure>
+</section>
+<section id="bounded-vs-unbounded" class="slide level1">
+<h1>Bounded vs Unbounded</h1>
+<ul>
+<li class="fragment"><p>RJ is unbounded - long tail of Gaussian distribution</p></li>
+<li class="fragment">Dj are bounded - must within a fixed range</li>
+<li class="fragment"><p>This is a significant differences, that's the reason why tail fit works</p></li>
+</ul>
+</section>
+<section id="uncorrelated-vs-dependent" class="slide level1">
+<h1>Uncorrelated vs Dependent</h1>
+<ul>
+<li class="fragment">Uncorrelated or dependent is relative to data stream</li>
+<li class="fragment">Uncorrelated jitter need &quot;<strong>convolve</strong>&quot; , dependent jitter need &quot;<strong>add</strong>&quot;.</li>
+<li class="fragment">RJ and DJ is uncorrelated</li>
+<li class="fragment">DCD,ISI is data dependent</li>
+<li class="fragment">PJ is also uncorrelated to data, but still &quot;add&quot;</li>
+<li class="fragment">Crosstalk is BUJ(Bounded uncorrelated jitter)</li>
+</ul>
+</section>
+<section id="review-of-statistics" class="slide level1">
+<h1>Review of statistics</h1>
+<ul>
+<li class="fragment"><p>PDF - The Probability density function, sometimes written <span class="math inline">\(\rho(x)\)</span>.Histograms are closest in terms of a measurable probability density, and are said to approximate the PDF when normalized.</p></li>
+<li class="fragment"><p>CDF - The Cumulative Distribution Function is <span class="math inline">\(CDF(x) = \int_{-\infty}^{x}PDF(u)du\)</span></p></li>
+<li class="fragment"><p>PDF of Gaussion. <span class="math inline">\(\rho(x) = \frac{w}{\sigma\sqrt{2\pi}}e^{-\frac{(x-\mu)^2}{2\sigma^2}}\)</span></p></li>
+</ul>
+</section>
+<section id="statistics-contd" class="slide level1">
+<h1>Statistics cont'd</h1>
+<ul>
+<li class="fragment"><p>Error Function. <span class="math inline">\(erf(x) = \frac{2}{\sqrt{\pi}}\int_0^xe^{-u^2}du​\)</span> . It is a basic a mathematical function closely related to the cumulative distribution function for a Gaussian. <span class="math inline">\(1-2CDF_{Gaussian}(x) = erf(x)​\)</span></p></li>
+<li class="fragment"><p>Complimentary Error Function. <span class="math inline">\(erfc(x)\equiv 1-erf(x)\)</span> or <span class="math inline">\(erfc(x) = \frac{2}{\sqrt{\pi}}\int_x^\infty e^{-u^2}du\)</span></p></li>
+<li class="fragment"><p>Inverse Error Function, <span class="math inline">\(erf^{-1}(x)\)</span>, This function has no closed analytic form but can be obtained from numerical methods.</p></li>
+</ul>
+</section>
+<section id="erf-relations" class="slide level1">
+<h1>ERF relations</h1>
+<figure>
+<img src="images\erf.png" />
+</figure>
+</section>
+<section id="bert-vs-scope" class="slide level1">
+<h1>BERT vs Scope</h1>
+<ul>
+<li class="fragment">BERT
+<ul>
+<li class="fragment">Shift the sampling point across an entire bit time</li>
+<li class="fragment">Base on number of errors found</li>
+<li class="fragment">Accuratly measures the total jitter</li>
+</ul></li>
+<li class="fragment">Scope
+<ul>
+<li class="fragment">Get a limited number of samples</li>
+<li class="fragment">Good at determining the jitter components</li>
+<li class="fragment">Need post-process to estimate RJ</li>
+</ul></li>
+</ul>
+</section>
+<section id="bathtub" class="slide level1">
+<h1>Bathtub</h1>
+<figure>
+<img src="images\bathtub.PNG" />
+</figure>
+</section>
+<section id="ber-vs-jitter" class="slide level1">
+<h1>BER vs Jitter</h1>
+<figure>
+<img src="images\BER_vs_Jitter.png" />
+</figure>
+</section>
+<section id="dual-dirac-model" class="slide level1">
+<h1>Dual Dirac Model</h1>
+<figure>
+<img src="images\dual_dirac.png" />
+</figure>
+<ul>
+<li class="fragment">An approximate method</li>
+<li class="fragment">Quickly estimating of total jitter</li>
+<li class="fragment">Not reflect the true jitter</li>
+</ul>
+</section>
+<section id="assumption" class="slide level1">
+<h1>Assumption</h1>
+<ol type="1">
+<li class="fragment">Jitter can be separated into two categories, random jitter (RJ) and deterministic jitter (DJ).</li>
+<li class="fragment">RJ follows a Gaussian distribution and can be fully described in terms of a single relevant parameter, the rms(<span class="math inline">\(\sigma\)</span>) value of the RJ distribution.</li>
+<li class="fragment">DJ follows a finite, bounded distribution.</li>
+<li class="fragment">DJ follows a distribution formed by two Dirac-delta functions.</li>
+<li class="fragment">Jitter is a stationary phenomenon. Give the same result regardless of when that time interval is initiated.</li>
+</ol>
+</section>
+<section id="math-expression" class="slide level1">
+<h1>Math Expression</h1>
+<ul>
+<li class="fragment"><p>PJ pdf is <span class="math inline">\(A*\delta(x-\mu_l) + B*\delta(x-\mu_r)\)</span></p></li>
+<li class="fragment"><p>RJ pdf is <span class="math inline">\(\frac{1}{\sigma_{(\delta\delta)}\sqrt{2\pi}}\exp{[-\frac{x^2}{2\sigma^2_{(\sigma\sigma)}}]}\)</span></p></li>
+<li class="fragment"><p>TJ combined by convolve, as it is uncorrelated <span class="math inline">\(\frac{A}{\sigma_{(\delta\delta)}\sqrt{2\pi}}\exp{[-\frac{(x-\mu_l)^2}{2\sigma^2_{(\sigma\sigma)}}]} + \frac{B}{\sigma_{(\delta\delta)}\sqrt{2\pi}}\exp{[-\frac{(x-\mu_r)^2}{2\sigma^2_{(\sigma\sigma)}}]}\)</span></p></li>
+<li class="fragment">RJ RMS combine: <span class="math inline">\(\sigma_{Total} = \sqrt{\sigma_1^2+\sigma_2^2+...\sigma_n^2}\)</span></li>
+<li class="fragment"><p>DJ pp combine: <span class="math inline">\(DJ_{total}(\delta\delta) = DJ_1(\delta\delta)+DJ_2(\delta\delta)+...+DJ_n(\delta\delta)\)</span></p></li>
+</ul>
+</section>
+<section id="dj_pp-vs-dj_deltadelta" class="slide level1">
+<h1><span class="math inline">\(DJ_{pp}\)</span> vs <span class="math inline">\(DJ_{\delta\delta}\)</span></h1>
+<ul>
+<li class="fragment"><p>Dual-Dirac DJ is a completely different quantity than the peak-to-peak DJ(very confused)</p></li>
+<li class="fragment"><p>To distinguish the two use the notation <span class="math inline">\(DJ_{pp}\)</span> as the real jitter, <span class="math inline">\(DJ_{\delta\delta}\)</span> as dual-Dirac model DJ</p></li>
+<li class="fragment"><p><span class="math inline">\(DJ_{pp}\)</span> never follows the simple dual-Dirac distribution</p></li>
+<li class="fragment"><p><span class="math inline">\(DJ_{\delta\delta}\)</span> is a model dependent quantity that must be derived under the assumption that DJ follows a distribution formed by two Dirac-delta. Generally, <span class="math inline">\(DJ_{\delta\delta} &lt;DJ_{pp}\)</span></p></li>
+</ul>
+</section>
+<section id="dj_pp-vs-dj_deltadelta-contd" class="slide level1">
+<h1><span class="math inline">\(DJ_{pp}\)</span> vs <span class="math inline">\(DJ_{\delta\delta}\)</span> cont'd</h1>
+<figure>
+<img src="images\DJ_pp_vs_DJ_delta_delta.png" />
+</figure>
+</section>
+<section id="tj-vs-ber" class="slide level1">
+<h1>TJ vs BER</h1>
+<p><span class="math display">\[TJ(BER) = 2\cdot N(BER)\cdot \sigma_{total} + DJ_{total}\]</span></p>
+<p><span class="math display">\[N =\sqrt2\cdot erfc^{-1}(2\cdot BER)\]</span></p>
+<p>if BER if 1e-12, we could get the factor as 14.07 by the following code. Most of time we use a look-up table</p>
+<div class="sourceCode"><pre class="sourceCode python"><code class="sourceCode python"><span class="im">from</span> scipy.special <span class="im">import</span> erfcinv
+<span class="im">import</span> numpy <span class="im">as</span> np
+BER <span class="op">=</span> <span class="fl">1E-12</span>
+<span class="bu">print</span> <span class="dv">2</span><span class="op">*</span>np.sqrt(<span class="dv">2</span>)<span class="op">*</span>erfcinv(<span class="dv">2</span><span class="op">*</span>BER)</code></pre></div>
+</section>
+<section id="jitter-decompose" class="slide level1">
+<h1>Jitter decompose</h1>
+<ul>
+<li class="fragment"><p>Spectral Method</p></li>
+<li class="fragment"><p>Tail Fit method</p></li>
+</ul>
+</section>
+<section id="spectral-method" class="slide level1">
+<h1>Spectral Method</h1>
+<ul>
+<li class="fragment">FFT of TIE(t)</li>
+<li class="fragment">spectral “peaks” are manifestations of deterministic jitter, and thus provide a measure of DJ</li>
+<li class="fragment">The remaining spectrum, or “noise floor” accounts for all of RJ</li>
+<li class="fragment">Remove the &quot;peaks&quot;, and IFFT the &quot;noise floor&quot; get RJ</li>
+<li class="fragment">Deconvolve and get DJ</li>
+</ul>
+</section>
+<section id="spectral-problem" class="slide level1">
+<h1>Spectral problem</h1>
+<ul>
+<li class="fragment">BUJ like crosstalk is will impact noise floor</li>
+<li class="fragment">Non-Stationary Periodic aggressors (like Spread Spectrum) manifest broadly in the jitter spectrum and cannot always be identified as “peaks”</li>
+<li class="fragment">In effect, any wide-band aggressor which contributes bounded timing fluctuations will be indistinguishable from the noise floor, and consequently “counted” as RJ.</li>
+<li class="fragment">Then it is easy to overestimations of Tj</li>
+</ul>
+</section>
+<section id="tail-fit-method" class="slide level1">
+<h1>Tail fit method</h1>
+<figure>
+<img src="images\tail_fit.PNG" />
+</figure>
+<p># Tail fit difficulties</p>
+<ul>
+<li class="fragment">Exponential waveform fit. - Q-scale</li>
+<li class="fragment">Find the region of pure Gaussian PDF. - Re-normalized Q-scale</li>
+<li class="fragment">Need enough samples to get more long tail data.</li>
+</ul>
+</section>
+<section id="q-scale" class="slide level1">
+<h1>Q-scale</h1>
+<ul>
+<li class="fragment">A smart method transform the exponential waveform to linear</li>
+<li class="fragment">Q-scale is a simple coordinates transformation. Similar method like Cartesian coordinates to Polar coordinates, time domain to frequency domain. Different view point of the same physical object.</li>
+<li class="fragment">Replace x with <span class="math inline">\(Q = \frac{x-\mu}{\sigma}\)</span> in BER expression, we get Q scale.</li>
+</ul>
+</section>
+<section id="math-deduction" class="slide level1">
+<h1>Math deduction</h1>
+<p>At the region far from DJ(long tail), the distribution is Gaussion, it also have left and right part. Just take left side as example. <span class="math display">\[ BER_l(x) = K_l\frac{1}{\sigma_{l\delta\delta}\sqrt{2\pi}}\oint_x^\infty \exp\left[ -\frac{(x^\prime-\mu_{l\delta\delta})}{2\delta_{l\sigma\sigma}}\right]dx^\prime \]</span></p>
+<p>Let <span class="math inline">\(Q = \frac{x-\mu_{l\delta\delta}}{\sigma_{l\delta\delta}}\)</span>, we get</p>
+<p><span class="math display">\[ BER_l(Q) = K_l\frac{1}{\sigma_{l\delta\delta}\sqrt{2\pi}}\oint_Q^\infty \exp\left[ -\left(\frac{Q^\prime}{\sqrt2}\right)\right]dQ^\prime\]</span></p>
+</section>
+<section id="math-contd-1" class="slide level1">
+<h1>Math cont'd 1</h1>
+<p>Remember that complementary error function is given by</p>
+<p><span class="math display">\[ erfc(x) = \frac{2}{\sigma\sqrt{2\pi}}\oint_x^\infty \exp(-u^2)du \]</span></p>
+<p>then we could rewrite <span class="math inline">\(BER_l(Q)\)</span> as</p>
+<p><span class="math display">\[ BER_l(Q) = K_lerfc(\frac{Q}{\sqrt2}) = K_l(1-erf(\frac{Q}{\sqrt2})) \]</span></p>
+<p>inverse the function, <span class="math inline">\(A_l = \frac{1}{K_l}\)</span>we get</p>
+<p><span class="math display">\[ Q_l(x) = \sqrt2erf^{-1}\left[ 1 -BER_l\cdot A_l\right] \]</span></p>
+</section>
+<section id="math-contd-2" class="slide level1">
+<h1>Math cont'd 2</h1>
+<p>compare the 2 equation, the target is fit the 2.</p>
+<p><span class="math display">\[ Q_l(x) = \sqrt2erf^{-1}\left[ 1 -BER_l(x)\cdot A_l\right] \]</span></p>
+<p><span class="math display">\[Q_l(x) = \frac{x-\mu_{l\delta\delta}}{\sigma_{l\delta\delta}}\]</span></p>
+<figure>
+<img src="images\q_scale_fit.png" alt="q_scale_fit" /><figcaption>q_scale_fit</figcaption>
+</figure>
+</section>
+<section id="q-scale-fit" class="slide level1">
+<h1>Q-scale fit</h1>
+<figure>
+<img src="images\q_scale_fit_improve.png" />
+</figure>
+</section>
+<section id="pros-of-tail-fit" class="slide level1">
+<h1>Pros of tail fit</h1>
+<ul>
+<li class="fragment">The noise like or flat spectrum jitter source like crosstalk and SSC could be remove from RJ</li>
+<li class="fragment">If a system will too much crosstalk, it is better use tail fit method, otherwise spectrum method could be used.</li>
+</ul>
+</section>
+<section id="scope-setting" class="slide level1">
+<h1>Scope setting</h1>
+<figure>
+<img src="images\ezjit_Setting.png" />
+</figure>
+</section>
+<section id="q-scale-option" class="slide level1">
+<h1>Q-Scale option</h1>
+<figure>
+<img src="images\ezjit_Setting_adv.png" />
+</figure>
+</section>
+<section id="split-threshold" class="slide level1">
+<h1>Split threshold</h1>
+<figure>
+<img src="images\spectrum_RJ_threshold.png" />
+</figure>
+</section>
+<section id="ber-scale" class="slide level1">
+<h1>BER scale</h1>
+<figure>
+<img src="images\scope_ber_scale.png" />
+</figure>
+</section>
+<section id="q-scale-1" class="slide level1">
+<h1>Q scale <img src="images\scope_q_scale.png" /></h1>
+</section>
+<section id="jitter-result" class="slide level1">
+<h1>Jitter Result</h1>
+<figure>
+<img src="images\scope_result.png" />
+</figure>
+</section>
+<section id="summary" class="slide level1">
+<h1>Summary</h1>
+<ul>
+<li class="fragment">Dual-Dirac model is for estimate RJ, aks. extrapolation.</li>
+<li class="fragment">RJ is the easy split than DJ, as its PDF feature.</li>
+<li class="fragment">Both spectrum and tail fit have pros and cons</li>
+</ul>
+</section>
+    </div>
+  </div>
+
+  <script src="reveal.js/lib/js/head.min.js"></script>
+  <script src="reveal.js/js/reveal.js"></script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://github.com/hakimel/reveal.js#configuration
+      Reveal.initialize({
+
+        // Optional reveal.js plugins
+        dependencies: [
+          { src: 'reveal.js/lib/js/classList.js', condition: function() { return !document.body.classList; } },
+          { src: 'reveal.js/plugin/zoom-js/zoom.js', async: true },
+          { src: 'reveal.js/plugin/notes/notes.js', async: true }
+        ]
+      });
+    </script>
+    </body>
+</html>
